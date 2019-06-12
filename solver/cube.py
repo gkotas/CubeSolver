@@ -10,6 +10,11 @@ DOWN  = np.array([[ 0], [-1], [ 0]])
 FRONT = np.array([[ 0], [ 0], [ 1]])
 BACK  = np.array([[ 0], [ 0], [-1]])
 
+# Slices
+MIDDLE     = LEFT
+EQUATORIAL = DOWN
+STANDING   = FRONT
+
 # Colors
 RED = 'R'
 WHITE = 'W'
@@ -184,7 +189,7 @@ class Cube():
         # Not found
         return None
 
-    # Rotation Functions
+    # Face Rotation Functions
     def R(self): self._rotateFace(RIGHT, YZ_CW)
     def Ri(self): self._rotateFace(RIGHT, YZ_CCW)
     def L(self): self._rotateFace(LEFT, YZ_CCW)
@@ -198,11 +203,26 @@ class Cube():
     def B(self): self._rotateFace(BACK, XY_CCW)
     def Bi(self): self._rotateFace(BACK, XY_CW)
 
+    # Slice Rotation Functions
+    def M(self): self._rotateSlice(MIDDLE, YZ_CCW)
+    def Mi(self): self._rotateSlice(MIDDLE, YZ_CW)
+    def E(self): self._rotateSlice(EQUATORIAL, XZ_CCW)
+    def Ei(self): self._rotateSlice(EQUATORIAL, XZ_CW)
+    def S(self): self._rotateSlice(STANDING, XY_CW)
+    def Si(self): self._rotateSlice(STANDING, XY_CCW)
+
     def _rotateFace(self, face, rotation_matrix):
         '''
         Rotates each cubie on the face.
         '''
         for c in self._getCubiesOnFace(face):
+            c.rotate(rotation_matrix)
+
+    def _rotateSlice(self, slice, rotation_matrix):
+        '''
+        Rotates each cubie in the slice.
+        '''
+        for c in self._getCubiesInSlice(slice):
             c.rotate(rotation_matrix)
 
     def _getCubiesOnFace(self, face):
@@ -211,11 +231,19 @@ class Cube():
         '''
         return [c for c in self._cubies if c.onFace(face)]
 
+    def _getCubiesInSlice(self, slice):
+        '''
+        Returns a list of cubies in the specified slice.
+        '''
+        return [c for c in self._cubies if c.inSlice(slice)]
+
 if __name__ == '__main__':
+    from pretty import prettyPrint
+
     cube = Cube('RRRRRRRRRBBBBBBBBBWWWWWWWWWGGGGGGGGGYYYYYYYYYOOOOOOOOO')
 
-    print(cube.print())
+    prettyPrint(cube)
 
-    cube.F()
+    cube.S()
 
-    print(cube.print())
+    prettyPrint(cube)

@@ -52,3 +52,9 @@ class Cubie():
         Returns true if the cubie is on the specified face.
         '''
         return np.dot(face.squeeze(), self.pos.squeeze()) == 1
+
+    def inSlice(self, slice):
+        '''
+        Returns true if the cubie is in the specified slice.
+        '''
+        return np.dot(slice.squeeze(), self.pos.squeeze()) == 0
