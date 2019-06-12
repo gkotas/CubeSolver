@@ -211,6 +211,14 @@ class Cube():
     def S(self): self._rotateSlice(STANDING, XY_CW)
     def Si(self): self._rotateSlice(STANDING, XY_CCW)
 
+    # Cube Rotation Functions
+    def X(self): self._rotateCube(YZ_CW)
+    def Xi(self): self._rotateCube(YZ_CCW)
+    def Y(self): self._rotateCube(XZ_CW)
+    def Yi(self): self._rotateCube(XZ_CCW)
+    def Z(self): self._rotateCube(XY_CW)
+    def Zi(self): self._rotateCube(XY_CCW)
+
     def _rotateFace(self, face, rotation_matrix):
         '''
         Rotates each cubie on the face.
@@ -223,6 +231,13 @@ class Cube():
         Rotates each cubie in the slice.
         '''
         for c in self._getCubiesInSlice(slice):
+            c.rotate(rotation_matrix)
+
+    def _rotateCube(self, rotation_matrix):
+        '''
+        Rotates each cubie.
+        '''
+        for c in self._cubies:
             c.rotate(rotation_matrix)
 
     def _getCubiesOnFace(self, face):
@@ -244,6 +259,6 @@ if __name__ == '__main__':
 
     prettyPrint(cube)
 
-    cube.S()
+    cube.Z()
 
     prettyPrint(cube)
