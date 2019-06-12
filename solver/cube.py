@@ -63,9 +63,9 @@ class Cube():
 
         return ''.join(u + l + f + r + b + d)
 
-    def print(self):
+    def getLayout(self):
         '''
-        Prints the layout of the cube.
+        Returns the layout of the cube.
         '''
         return '''\
     {0}{1}{2}
