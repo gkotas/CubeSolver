@@ -1,44 +1,8 @@
 import numpy as np
+import random
 
+from constants import *
 from cubie import Cubie
-
-# Faces
-RIGHT = np.array([[ 1], [ 0], [ 0]])
-LEFT  = np.array([[-1], [ 0], [ 0]])
-UP    = np.array([[ 0], [ 1], [ 0]])
-DOWN  = np.array([[ 0], [-1], [ 0]])
-FRONT = np.array([[ 0], [ 0], [ 1]])
-BACK  = np.array([[ 0], [ 0], [-1]])
-
-# Slices
-MIDDLE     = LEFT
-EQUATORIAL = DOWN
-STANDING   = FRONT
-
-# Colors
-RED = 'R'
-WHITE = 'W'
-BLUE = 'B'
-GREEN = 'G'
-ORANGE = 'O'
-YELLOW = 'Y'
-
-
-# Rotation Matrices
-XY_CW = np.array([[ 0, 1, 0],
-                  [-1, 0, 0],
-                  [ 0, 0, 1]])
-XY_CCW = XY_CW.transpose()
-
-YZ_CW = np.array([[1,  0, 0],
-                  [0,  0, 1],
-                  [0, -1, 0]])
-YZ_CCW = YZ_CW.transpose()
-
-XZ_CW = np.array([[0, 0, -1],
-                  [0, 1,  0],
-                  [1, 0,  0]])
-XZ_CCW = XZ_CW.transpose()
 
 
 class Cube():
@@ -145,39 +109,39 @@ class Cube():
 
         # Check all pieces exist by searching for colors
         # Faces
-        assert self._getCubieByColors((RED)) != None, "Missing Piece"
-        assert self._getCubieByColors((WHITE)) != None, "Missing Piece"
-        assert self._getCubieByColors((BLUE)) != None, "Missing Piece"
-        assert self._getCubieByColors((GREEN)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE)) != None, "Missing Piece"
-        assert self._getCubieByColors((YELLOW)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED)) != None, "Missing Piece"
+        assert self.getCubieByColors((WHITE)) != None, "Missing Piece"
+        assert self.getCubieByColors((BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE)) != None, "Missing Piece"
+        assert self.getCubieByColors((YELLOW)) != None, "Missing Piece"
 
         # Edges
-        assert self._getCubieByColors((RED, WHITE)) != None, "Missing Piece"
-        assert self._getCubieByColors((RED, BLUE)) != None, "Missing Piece"
-        assert self._getCubieByColors((RED, YELLOW)) != None, "Missing Piece"
-        assert self._getCubieByColors((RED, GREEN)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE, WHITE)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE, BLUE)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE, YELLOW)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE, GREEN)) != None, "Missing Piece"
-        assert self._getCubieByColors((YELLOW, GREEN)) != None, "Missing Piece"
-        assert self._getCubieByColors((YELLOW, BLUE)) != None, "Missing Piece"
-        assert self._getCubieByColors((WHITE, GREEN)) != None, "Missing Piece"
-        assert self._getCubieByColors((WHITE, BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED, WHITE)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED, BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED, YELLOW)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED, GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE, WHITE)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE, BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE, YELLOW)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE, GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((YELLOW, GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((YELLOW, BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((WHITE, GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((WHITE, BLUE)) != None, "Missing Piece"
 
         # Corners
-        assert self._getCubieByColors((RED, WHITE, BLUE)) != None, "Missing Piece"
-        assert self._getCubieByColors((RED, WHITE, GREEN)) != None, "Missing Piece"
-        assert self._getCubieByColors((RED, YELLOW, BLUE)) != None, "Missing Piece"
-        assert self._getCubieByColors((RED, YELLOW, GREEN)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE, WHITE, BLUE)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE, WHITE, GREEN)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE, YELLOW, BLUE)) != None, "Missing Piece"
-        assert self._getCubieByColors((ORANGE, YELLOW, GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED, WHITE, BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED, WHITE, GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED, YELLOW, BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((RED, YELLOW, GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE, WHITE, BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE, WHITE, GREEN)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE, YELLOW, BLUE)) != None, "Missing Piece"
+        assert self.getCubieByColors((ORANGE, YELLOW, GREEN)) != None, "Missing Piece"
 
 
-    def _getCubieByColors(self, colors):
+    def getCubieByColors(self, colors):
         '''
         Searches list of cubies for one matching the colors specified. Returns
         found cubie or None if not found.
@@ -188,6 +152,14 @@ class Cube():
 
         # Not found
         return None
+
+    def getCubieByPosition(self, pos):
+        '''
+        Returns the cubie in the specified position.
+        '''
+        for cubie in self._cubies:
+            if all(cubie.pos == pos):
+                return cubie
 
     # Face Rotation Functions
     def R(self): self._rotateFace(RIGHT, YZ_CW)
@@ -218,6 +190,36 @@ class Cube():
     def Yi(self): self._rotateCube(XZ_CCW)
     def Z(self): self._rotateCube(XY_CW)
     def Zi(self): self._rotateCube(XY_CCW)
+
+    def moveSequence(self, seq):
+        '''
+        Takes a string of moves, space delimited, and applies the moves.
+        '''
+        moves = seq.split(' ')
+        for move in moves:
+            getattr(self, move)()
+
+    def scramble(self, seed=None):
+        '''
+        Applies a set of random moves to the cube and returns the move sequence.
+        '''
+        valid_moves = ['R', 'L', 'U', 'D', 'F', 'B', 'M', 'E', 'S']
+        # Add the inverses to the list
+        valid_moves += [move + 'i' for move in valid_moves]
+
+        if seed:
+            random.seed(seed)
+
+        # Pick 30 random moves
+        moves = []
+        for _ in range(30):
+            moves.append(random.choice(valid_moves))
+
+        # Make sequence string
+        sequence = ' '.join(moves)
+        self.moveSequence(sequence)
+
+        return sequence
 
     def _rotateFace(self, face, rotation_matrix):
         '''
@@ -252,6 +254,12 @@ class Cube():
         '''
         return [c for c in self._cubies if c.inSlice(slice)]
 
+    def getCubeFaceColor(self, face):
+        '''
+        Returns the color of the face of the cube.
+        '''
+        return self.getCubieByPosition(face).getCubieFaceColor(face)
+
 if __name__ == '__main__':
     from pretty import prettyPrint
 
@@ -259,6 +267,7 @@ if __name__ == '__main__':
 
     prettyPrint(cube)
 
-    cube.Z()
+    # cube.R()
+    print(cube.scramble(42))
 
     prettyPrint(cube)

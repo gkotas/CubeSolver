@@ -1,5 +1,7 @@
 import numpy as np
 
+from constants import RIGHT, LEFT, FRONT, BACK, UP, DOWN
+
 
 class Cubie():
     def __init__(self, pos, colors):
@@ -52,6 +54,32 @@ class Cubie():
         Returns true if the cubie is on the specified face.
         '''
         return np.dot(face.squeeze(), self.pos.squeeze()) == 1
+
+    def getCubieFaceFromColor(self, color):
+        '''
+        Returns the face of the cube that has the specified color.
+        '''
+        # Either Right or Left
+        if self.colors[0] == color:
+            if self.x() == 1:
+                return 'R'
+            elif self.x() == -1:
+                return 'L'
+
+        # Either Up or Down
+        if self.colors[1] == color:
+            if self.y() == 1:
+                return 'U'
+            elif self.y() == -1:
+                return 'D'
+
+        # Either Front or Back
+        if self.colors[2] == color:
+            if self.z() == 1:
+                return 'F'
+            elif self.z() == -1:
+                return 'B'
+
 
     def inSlice(self, slice):
         '''
