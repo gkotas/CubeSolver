@@ -24,6 +24,11 @@ class Solver():
             prettyPrint(self.cube)
 
         self._solveSecondLayer()
+        if self.debug:
+            print("Solved Second Layer")
+            prettyPrint(self.cube)
+
+        self._solveTopCross()
 
         print(' '.join(self.moves))
         print(len(self.moves))
@@ -363,6 +368,56 @@ class Solver():
             # Spin whole cube to handle next piece
             self.cube.Y()
             self.moves.append('Y')
+
+    def _solveTopCross(self):
+        '''
+        Step 4: Solve the edges on the top layer to make the cross.
+        '''
+        uf = self.cube.getCubieByPosition(UP + FRONT)
+        ur = self.cube.getCubieByPosition(UP + RIGHT)
+        ub = self.cube.getCubieByPosition(UP + BACK)
+        ul = self.cube.getCubieByPosition(UP + LEFT)
+
+        up_color = self.cube.getCubeFaceColor(UP)
+
+        correct_pieces = [
+            uf.getCubieFaceColor(UP) == up_color,
+            ur.getCubieFaceColor(UP) == up_color,
+            ub.getCubieFaceColor(UP) == up_color,
+            ul.getCubieFaceColor(UP) == up_color,
+        ]
+
+        if correct_pieces == [True, True, True, True]:
+            # Cross is solved
+            pass
+        elif correct_pieces == [False, False, False, False]:
+            # No pieces in cross
+            seq = 'F R U Ri Ui S R U Ri Ui Bi Zi'
+            self.cube.moveSequence(seq)
+            self.moves.extend(seq.split(' '))
+        elif correct_pieces == [False, True, False, True]:
+            # I shape from Right to Left
+            seq = 'F R U Ri Ui Fi'
+            self.cube.moveSequence(seq)
+            self.moves.extend(seq.split(' '))
+        elif correct_pieces == [True, False, True, False]:
+            # I shape from Right to Left
+            seq = 'Y F R U Ri Ui Fi'
+            self.cube.moveSequence(seq)
+            self.moves.extend(seq.split(' '))
+        else:
+            # Must be L in 1 of 4 positions, Spin so its Front Right
+            count = 0
+            while correct_pieces != [True, True, False, False]:
+                count += 1
+                self.cube.Y()
+                self.moves.append('Y')
+                correct_pieces = correct_pieces[1:] + [correct_pieces[0]]
+                assert count < 4, "Piece can't get to DOWN+FRONT+RIGHT"
+
+            seq = 'B Z R U Ri Ui Bi Zi'
+            self.cube.moveSequence(seq)
+            self.moves.extend(seq.split(' '))
 
 if __name__ == '__main__':
     from cube import Cube
