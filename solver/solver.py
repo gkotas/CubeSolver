@@ -23,6 +23,8 @@ class Solver():
             print("Solved First Layer")
             prettyPrint(self.cube)
 
+        self._solveSecondLayer()
+
         print(' '.join(self.moves))
         print(len(self.moves))
 
@@ -277,19 +279,105 @@ class Solver():
             self.cube.Y()
             self.moves.append('Y')
 
+    def _solveSecondLayer(self):
+        '''
+        Step 3: Put in the edges on the second layer.
+        '''
+        fr = self.cube.getCubieByColors((self.cube.getCubeFaceColor(FRONT),
+                                         self.cube.getCubeFaceColor(RIGHT)))
+        rb = self.cube.getCubieByColors((self.cube.getCubeFaceColor(RIGHT),
+                                         self.cube.getCubeFaceColor(BACK)))
+        bl = self.cube.getCubieByColors((self.cube.getCubeFaceColor(BACK),
+                                         self.cube.getCubeFaceColor(LEFT)))
+        lf = self.cube.getCubieByColors((self.cube.getCubeFaceColor(LEFT),
+                                         self.cube.getCubeFaceColor(FRONT)))
+
+        # OPTIMIZE: Try out other orders for a lower move possibility
+        for piece in (fr, rb, bl, lf):
+            # Get the face of the front color
+            front_color = self.cube.getCubeFaceColor(FRONT)
+            front_color_face = piece.getCubieFaceFromColor(front_color)
+
+            if all(piece.pos == FRONT + RIGHT):
+                # Continue if piece is solved
+                if front_color_face == 'F':
+                    # Piece is already solved
+                    pass
+                else:
+                    # Piece needs to be flipped
+                    seq = 'R Ui Ri U Fi U U F U U Fi U F'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+            else:
+                # Move piece to U layer if not already
+                if not piece.onFace(UP):
+                    # Spin cube until piece is in FRONT + RIGHT
+                    count = 0
+                    while not all(piece.pos == FRONT + RIGHT):
+                        count += 1
+                        self.cube.Y()
+                        self.moves.append('Y')
+                        assert count < 4, "Piece can't get to DOWN+FRONT+RIGHT"
+
+                    prettyPrint(self.cube)
+                    seq = 'R Ui Ri Ui Fi U F'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+
+                    # Return cube back to original orientation
+                    for _ in range(count):
+                        self.cube.Yi()
+                        self.moves.append('Yi')
+
+                # Color on UP determines if F or R is used to drop into DFR
+                up_face_color = piece.getCubieFaceColor(UP)
+
+                if up_face_color == self.cube.getCubeFaceColor(RIGHT):
+                    # Piece must be moved to UL
+                    count = 0
+                    while not all(piece.pos == UP + LEFT):
+                        count += 1
+                        self.cube.U()
+                        self.moves.append('U')
+                        assert count < 4, "Piece can't get to UP+LEFT"
+
+                    seq = 'R Ui Ri Ui Fi U F'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+
+                elif up_face_color == self.cube.getCubeFaceColor(FRONT):
+                    # Piece must be moved to UB
+                    count = 0
+                    while not all(piece.pos == UP + BACK):
+                        count += 1
+                        self.cube.U()
+                        self.moves.append('U')
+                        assert count < 4, "Piece can't get to UP+BACK"
+
+                    seq = 'Fi U F U R Ui Ri'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                else:
+                    assert False, "up_face_color isn't F or R?"
+
+            # Spin whole cube to handle next piece
+            self.cube.Y()
+            self.moves.append('Y')
+
 if __name__ == '__main__':
     from cube import Cube
     from pretty import prettyPrint
 
-    cube = Cube('RRRRRRRRRBBBBBBBBBWWWWWWWWWGGGGGGGGGYYYYYYYYYOOOOOOOOO')
-    cube.scramble(42)
+    for i in range(50):
+        cube = Cube('RRRRRRRRRBBBBBBBBBWWWWWWWWWGGGGGGGGGYYYYYYYYYOOOOOOOOO')
+        cube.scramble(i)
 
-    prettyPrint(cube)
+        prettyPrint(cube)
 
-    solver = Solver(cube, True)
-    solver.solve()
+        solver = Solver(cube, True)
+        solver.solve()
 
-    prettyPrint(cube)
+        prettyPrint(cube)
 
-    # print("Seed:", i)
-    # input()
+        print("Seed:", i)
+        input()
