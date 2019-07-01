@@ -29,6 +29,11 @@ class Solver():
             prettyPrint(self.cube)
 
         self._solveTopCross()
+        if self.debug:
+            print("Solved Top Cross")
+            prettyPrint(self.cube)
+
+        self._solveTopLayer()
 
         print(' '.join(self.moves))
         print(len(self.moves))
@@ -418,6 +423,140 @@ class Solver():
             seq = 'B Z R U Ri Ui Bi Zi'
             self.cube.moveSequence(seq)
             self.moves.extend(seq.split(' '))
+
+    def _solveTopLayer(self):
+        '''
+        Step 4: Solve the corners to solve the top face.
+        '''
+        ufr = self.cube.getCubieByPosition(UP + FRONT + RIGHT)
+        urb = self.cube.getCubieByPosition(UP + RIGHT + BACK)
+        ubl = self.cube.getCubieByPosition(UP + BACK + LEFT)
+        ulf = self.cube.getCubieByPosition(UP + LEFT + FRONT)
+
+        up_color = self.cube.getCubeFaceColor(UP)
+
+        clockwise_solves = [0, 0, 0, 0]
+
+        if ufr.getCubieFaceFromColor(up_color) == 'F':
+            clockwise_solves[0] = 1
+        elif ufr.getCubieFaceFromColor(up_color) == 'R':
+            clockwise_solves[0] = 2
+
+        if urb.getCubieFaceFromColor(up_color) == 'R':
+            clockwise_solves[1] = 1
+        elif urb.getCubieFaceFromColor(up_color) == 'B':
+            clockwise_solves[1] = 2
+
+        if ubl.getCubieFaceFromColor(up_color) == 'B':
+            clockwise_solves[2] = 1
+        elif ubl.getCubieFaceFromColor(up_color) == 'L':
+            clockwise_solves[2] = 2
+
+        if ulf.getCubieFaceFromColor(up_color) == 'L':
+            clockwise_solves[3] = 1
+        elif ulf.getCubieFaceFromColor(up_color) == 'F':
+            clockwise_solves[3] = 2
+
+        print(clockwise_solves)
+
+        count = 0
+        while count < 4:
+            if clockwise_solves == [0, 0, 0, 0]:
+                #
+                #   |X|X|X|
+                #   |X|X|X|  -> [0, 0, 0, 0]
+                #   |X|X|X|
+                #
+                return
+
+            if clockwise_solves == [1, 2, 2, 1]:
+                #        X
+                #  X| |X| |
+                #   |X|X|X|  -> [1, 2, 2, 1]
+                #  X| |X| |
+                #        X
+                seq = 'R U U R R Ui R R Ui R R U U R'
+                self.cube.moveSequence(seq)
+                self.moves.extend(seq.split(' '))
+                return
+
+            if clockwise_solves == [1, 1, 1, 0]:
+                #    X
+                #   | |X| |X
+                #   |X|X|X|  -> [1, 1, 1, 0]
+                #   |X|X| |
+                #        X
+                seq = 'R Ui Li U Ri Ui L'
+                self.cube.moveSequence(seq)
+                self.moves.extend(seq.split(' '))
+                return
+
+            if clockwise_solves == [0, 2, 2, 2]:
+                #        X
+                #  X| |X| |
+                #   |X|X|X|  -> [0, 2, 2, 2]
+                #   | |X|X|
+                #    X
+                seq = 'Li U R Ui L U Ri'
+                self.cube.moveSequence(seq)
+                self.moves.extend(seq.split(' '))
+                return
+
+            if clockwise_solves == [1, 2, 1, 2]:
+                #    X   X
+                #   | |X| |
+                #   |X|X|X|  -> [1, 2, 1, 2]
+                #   | |X| |
+                #    X   X
+                seq = 'F R U Ri Ui R U Ri Ui R U Ri Ui Fi'
+                self.cube.moveSequence(seq)
+                self.moves.extend(seq.split(' '))
+                return
+
+            if clockwise_solves == [0, 0, 1, 2]:
+                #    X
+                #   | |X|X|
+                #   |X|X|X|  -> [0, 0, 1, 2]
+                #   | |X|X|
+                #    X
+                seq = 'L X U Ri Ui Li Xi F R Fi'
+                self.cube.moveSequence(seq)
+                self.moves.extend(seq.split(' '))
+                return
+
+            if clockwise_solves == [1, 0, 2, 0]:
+                #
+                #  X| |X|X|
+                #   |X|X|X|  -> [1, 0, 2, 0]
+                #   |X|X| |
+                #        X
+                seq = 'Fi L X U Ri Ui Li Xi F R'
+                self.cube.moveSequence(seq)
+                self.moves.extend(seq.split(' '))
+                return
+
+            if clockwise_solves == [0, 0, 2, 1]:
+                #
+                #  X| |X|X|
+                #   |X|X|X|  -> [0, 0, 2, 1]
+                #  X| |X|X|
+                #
+                print("Superman")
+                seq = 'R U Ri Ui R Ui Ri U U R Ui Ri U U R U Ri'
+                self.cube.moveSequence(seq)
+                self.moves.extend(seq.split(' '))
+                return
+
+            # Not a match to a known state, spin cube and check again
+            count += 1
+            self.cube.Y()
+            self.moves.append('Y')
+            clockwise_solves = clockwise_solves[1:] + clockwise_solves[:1]
+
+        # Spin cube 4 times and couldn't match
+        print(clockwise_solves)
+        assert False, "No match to solve top layer."
+
 
 if __name__ == '__main__':
     from cube import Cube
