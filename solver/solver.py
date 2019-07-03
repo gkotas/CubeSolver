@@ -34,6 +34,11 @@ class Solver():
             prettyPrint(self.cube)
 
         self._solveTopLayer()
+        if self.debug:
+            print("Solved Top Layer")
+            prettyPrint(self.cube)
+
+        self._solveLastLayer()
 
         print(' '.join(self.moves))
         print(len(self.moves))
@@ -329,7 +334,6 @@ class Solver():
                         self.moves.append('Y')
                         assert count < 4, "Piece can't get to DOWN+FRONT+RIGHT"
 
-                    prettyPrint(self.cube)
                     seq = 'R Ui Ri Ui Fi U F'
                     self.cube.moveSequence(seq)
                     self.moves.extend(seq.split(' '))
@@ -457,8 +461,6 @@ class Solver():
         elif ulf.getCubieFaceFromColor(up_color) == 'F':
             clockwise_solves[3] = 2
 
-        print(clockwise_solves)
-
         count = 0
         while count < 4:
             if clockwise_solves == [0, 0, 0, 0]:
@@ -541,7 +543,6 @@ class Solver():
                 #   |X|X|X|  -> [0, 0, 2, 1]
                 #  X| |X|X|
                 #
-                print("Superman")
                 seq = 'R U Ri Ui R Ui Ri U U R Ui Ri U U R U Ri'
                 self.cube.moveSequence(seq)
                 self.moves.extend(seq.split(' '))
@@ -557,6 +558,215 @@ class Solver():
         print(clockwise_solves)
         assert False, "No match to solve top layer."
 
+    def _solveLastLayer(self):
+        '''
+        Step 5: Permutates the last layer to solve the cube.
+        '''
+        clockwise_corner_solves = [None]*4
+        clockwise_edge_solves = [None]*4
+
+        for i in range(4):
+            uf = self.cube.getCubieByPosition(UP + FRONT)
+            ur = self.cube.getCubieByPosition(UP + RIGHT)
+            ub = self.cube.getCubieByPosition(UP + BACK)
+            ul = self.cube.getCubieByPosition(UP + LEFT)
+
+            ufr = self.cube.getCubieByPosition(UP + FRONT + RIGHT)
+            urb = self.cube.getCubieByPosition(UP + RIGHT + BACK)
+            ubl = self.cube.getCubieByPosition(UP + BACK + LEFT)
+            ulf = self.cube.getCubieByPosition(UP + LEFT + FRONT)
+
+            if uf.getCubieFaceColor(FRONT) == self.cube.getCubeFaceColor(FRONT):
+                clockwise_edge_solves[0] = i
+            if ur.getCubieFaceColor(RIGHT) == self.cube.getCubeFaceColor(RIGHT):
+                clockwise_edge_solves[1] = i
+            if ub.getCubieFaceColor(BACK) == self.cube.getCubeFaceColor(BACK):
+                clockwise_edge_solves[2] = i
+            if ul.getCubieFaceColor(LEFT) == self.cube.getCubeFaceColor(LEFT):
+                clockwise_edge_solves[3] = i
+
+            if ufr.getCubieFaceColor(FRONT) == self.cube.getCubeFaceColor(FRONT):
+                clockwise_corner_solves[0] = i
+            if urb.getCubieFaceColor(RIGHT) == self.cube.getCubeFaceColor(RIGHT):
+                clockwise_corner_solves[1] = i
+            if ubl.getCubieFaceColor(BACK) == self.cube.getCubeFaceColor(BACK):
+                clockwise_corner_solves[2] = i
+            if ulf.getCubieFaceColor(LEFT) == self.cube.getCubeFaceColor(LEFT):
+                clockwise_corner_solves[3] = i
+
+            clockwise_edge_solves = clockwise_edge_solves[1:] + clockwise_edge_solves[:1]
+            clockwise_corner_solves = clockwise_corner_solves[1:] + clockwise_corner_solves[:1]
+
+            self.cube.U()
+
+        u_count = 0
+        while u_count < 4:
+            y_count = 0
+            while y_count < 4:
+                # Solving PLL. There's 21 possible algorithms listed here:
+                # http://www.rubiksplace.com/speedcubing/PLL-algorithms/
+
+                # Edge Only Perms
+                if clockwise_edge_solves == [3, 2, 0, 3] and clockwise_corner_solves == [0, 0, 0, 0]:
+                    # print('Ua perm')
+                    seq = 'R Ui R U R U R Ui Ri Ui R R'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [1, 1, 0, 2] and clockwise_corner_solves == [0, 0, 0, 0]:
+                    # print('Ub perm')
+                    seq = 'R R U R U Ri Ui Ri Ui Ri U Ri'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [3, 1, 3, 1] and clockwise_corner_solves == [0, 0, 0, 0]:
+                    # print('Z perm')
+                    seq = 'U Ri Ui R Ui R U R Ui Ri U R U R R Ui Ri U'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [2, 2, 2, 2] and clockwise_corner_solves == [0, 0, 0, 0]:
+                    # print('H perm')
+                    seq = 'L L R R X X U L L R R X X U U L L R R X X U L L R R X X'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+
+                # Corner Only Perms
+                if clockwise_edge_solves == [0, 0, 0, 0] and clockwise_corner_solves == [2, 1, 1, 0]:
+                    # print('Aa perm')
+                    seq = 'Ri X U Ri D D R Ui Ri D D R R'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [0, 0, 0, 0] and clockwise_corner_solves == [3, 2, 0, 3]:
+                    # print('Ab perm')
+                    seq = 'R Xi Ui R D D Ri U R D D R R'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [0, 0, 0, 0] and clockwise_corner_solves == [3, 1, 3, 1]:
+                    # print('E perm')
+                    seq = 'Xi R Ui Ri D R U Ri Di R U Ri D R Ui Ri Di'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+
+                # Corner & Edge Swap Permutations
+                if clockwise_edge_solves == [0, 2, 0, 2] and clockwise_corner_solves == [3, 1, 0, 0]:
+                    # print('T perm')
+                    seq = 'R U Ri Ui Ri F R R Ui Ri Ui R U Ri Fi'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [0, 2, 0, 2] and clockwise_corner_solves == [0, 3, 1, 0]:
+                    # print('F perm')
+                    seq = 'Ri U R Ui R R Yi Ri Ui R U Y X R U Ri Ui R R Xi Ui'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [0, 0, 3, 1] and clockwise_corner_solves == [0, 3, 1, 0]:
+                    # print('Ja perm')
+                    seq = 'Ri U Li U U R Ui Ri U U L R Ui'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [3, 1, 0, 0] and clockwise_corner_solves == [3, 1, 0, 0]:
+                    # print('Jb perm')
+                    seq = 'R U Ri Fi R U Ri Ui Ri F R R Ui Ri Ui'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [1, 0, 0, 3] and clockwise_corner_solves == [0, 3, 1, 0]:
+                    # print('Ra perm')
+                    seq = 'L U U Li U U L Fi Li Ui L U L F L L U'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [3, 1, 0, 0] and clockwise_corner_solves == [0, 3, 1, 0]:
+                    # print('Rb perm')
+                    seq = 'Ri U U R U U Ri F R U Ri Ui Ri Fi R R Ui'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [0, 3, 1, 0] and clockwise_corner_solves == [2, 0, 2, 0]:
+                    # print('V perm')
+                    seq = 'Ri U Ri Ui X X Yi Ri U Ri Ui R Xi R Ui Ri U R U'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [0, 0, 3, 1] and clockwise_corner_solves == [2, 0, 2, 0]:
+                    # print('Y perm')
+                    seq = 'F R Ui Ri Ui R U Ri Fi R U Ri Ui Ri F R Fi'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [2, 0, 2, 0] and clockwise_corner_solves == [2, 0, 2, 0]:
+                    # print('Na perm')
+                    seq = 'L Ui R U U Li U Ri L Ui R U U Li U Ri U'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [2, 0, 2, 0] and clockwise_corner_solves == [0, 2, 0, 2]:
+                    # print('Nb perm')
+                    seq = 'Ri U Li U U R Ui L Ri U Li U U R Ui L Ui'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+
+                # Corner & Edge Cycle Permutations (G perms)
+                if clockwise_edge_solves == [0, 3, 3, 2] and clockwise_corner_solves == [0, 2, 1, 1]:
+                    # print('Ga perm')
+                    seq = 'R R D Y Ri U Ri Ui R Di Yi R R Yi Ri U R'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [2, 1, 1, 0] and clockwise_corner_solves == [3, 3, 2, 0]:
+                    # print('Gb perm')
+                    seq = 'Li Ui L Yi R R D Y Ri U R Ui R Di Yi R R'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [1, 1, 0, 2] and clockwise_corner_solves == [2, 0, 3, 3]:
+                    # print('Gc perm')
+                    seq = 'R R Di Yi R Ui R U Ri D Y R R Y R Ui Ri'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+                if clockwise_edge_solves == [2, 0, 3, 3] and clockwise_corner_solves == [0, 2, 1, 1]:
+                    # print('Gd perm')
+                    seq = 'R U Ri Yi R R Di Yi R Ui Ri U Ri D Y R R'
+                    self.cube.moveSequence(seq)
+                    self.moves.extend(seq.split(' '))
+                    return
+
+                # Not a match to a known state, spin cube and check again
+                y_count += 1
+                self.cube.Y()
+                self.moves.append('Y')
+
+                # Spinning cube clockwise barrel shifts the lists to the left
+                clockwise_edge_solves = clockwise_edge_solves[1:] + clockwise_edge_solves[:1]
+                clockwise_corner_solves = clockwise_corner_solves[1:] + clockwise_corner_solves[:1]
+
+            # Not a match to a known state, spin cube and check again
+            u_count += 1
+            self.cube.U()
+            self.moves.append('U')
+
+            # Spinning Up clockwise reduces each count by one
+            for i in range(4):
+                clockwise_edge_solves[i] = (clockwise_edge_solves[i] - 1) % 4
+                clockwise_corner_solves[i] = (clockwise_corner_solves[i] - 1) % 4
+            # And barrel shifts the lists to the left
+            clockwise_edge_solves = clockwise_edge_solves[1:] + clockwise_edge_solves[:1]
+            clockwise_corner_solves = clockwise_corner_solves[1:] + clockwise_corner_solves[:1]
+
+
+        # Spin cube 4 times and couldn't match
+        print(clockwise_edge_solves, clockwise_corner_solves)
+        assert False, "No match to solve top layer."
+
 
 if __name__ == '__main__':
     from cube import Cube
@@ -564,11 +774,11 @@ if __name__ == '__main__':
 
     for i in range(50):
         cube = Cube('RRRRRRRRRBBBBBBBBBWWWWWWWWWGGGGGGGGGYYYYYYYYYOOOOOOOOO')
-        cube.scramble(i)
+        print(cube.scramble(i))
 
         prettyPrint(cube)
 
-        solver = Solver(cube, True)
+        solver = Solver(cube)
         solver.solve()
 
         prettyPrint(cube)

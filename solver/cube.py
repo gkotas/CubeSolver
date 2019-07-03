@@ -203,7 +203,7 @@ class Cube():
         '''
         Applies a set of random moves to the cube and returns the move sequence.
         '''
-        valid_moves = ['R', 'L', 'U', 'D', 'F', 'B', 'M', 'E', 'S']
+        valid_moves = ['R', 'L', 'U', 'D', 'F', 'B']
         # Add the inverses to the list
         valid_moves += [move + 'i' for move in valid_moves]
 
