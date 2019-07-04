@@ -10,6 +10,8 @@ class Cube():
         '''
         Class representation of a Rubik's Cube.
         '''
+        if isinstance(colors, Cube):
+            colors = colors.getColorString()
         self._createCubies(colors.upper())
 
     def getColorString(self):

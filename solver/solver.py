@@ -1,3 +1,5 @@
+from itertools import permutations
+
 from constants import *
 
 class Solver():
@@ -47,125 +49,144 @@ class Solver():
         print(' '.join(self.cleanMoves))
         print(len(self.cleanMoves))
 
+        return self.cube
+
     def _solveCross(self):
         '''
         Step 1: Get the cross on the down face.
         '''
-        df = self.cube.getCubieByColors((self.cube.getCubeFaceColor(DOWN),
-                                         self.cube.getCubeFaceColor(FRONT)))
-        dr = self.cube.getCubieByColors((self.cube.getCubeFaceColor(DOWN),
-                                         self.cube.getCubeFaceColor(RIGHT)))
-        db = self.cube.getCubieByColors((self.cube.getCubeFaceColor(DOWN),
-                                         self.cube.getCubeFaceColor(BACK)))
-        dl = self.cube.getCubieByColors((self.cube.getCubeFaceColor(DOWN),
-                                         self.cube.getCubeFaceColor(LEFT)))
-
         down_color = self.cube.getCubeFaceColor(DOWN)
+        side_colors = [
+            self.cube.getCubeFaceColor(FRONT),
+            self.cube.getCubeFaceColor(RIGHT),
+            self.cube.getCubeFaceColor(BACK),
+            self.cube.getCubeFaceColor(LEFT),
+        ]
 
-        ######################
-        # Solve the df piece #
-        ######################
-        # OPTIMIZE: Try out other orders for a lower move possibility
-        for piece in (df, dr, db, dl):
-            # Get the face of the down color
-            down_color_face = piece.getCubieFaceFromColor(down_color)
+        best_cube = None
+        best_moves = None
+        best_clean_moves = [0]*100
 
-            # Continue if piece is solved
-            if all(piece.pos == DOWN + FRONT) and down_color_face == 'D':
-                # Piece is already solved
-                pass
+        # Test all orders to find the least moves
+        for perm in permutations(side_colors):
+            current_cube = Cube(self.cube)
+            current_moves = self.moves[:]
+            for color in perm:
+                # Spin whole cube until color is on front face
+                while current_cube.getCubeFaceColor(FRONT) != color:
+                    current_cube.Y()
+                    current_moves.append('Y')
 
-            else:
-                # Move to up layer, if not already
-                if not piece.onFace(UP):
-                    # Get color of cubie that isn't the down color
-                    other_color = (piece.getCubieColors() - set((down_color,))).pop()
-                    # Get the face of the other color
-                    other_color_face = piece.getCubieFaceFromColor(other_color)
+                piece = current_cube.getCubieByColors((down_color, color))
 
+                # Get the face of the down color
+                down_color_face = piece.getCubieFaceFromColor(down_color)
 
-                    # In E layer
-                    if (other_color_face + down_color_face) in ('FL', 'RF', 'BR', 'LB'):
-                        # Need to rotate face, UP, inverse face
-                        self.moves.append(other_color_face)
-                        self.moves.append('U')
-                        self.moves.append(other_color_face + 'i')
-                        self.cube.moveSequence(f'{other_color_face} U {other_color_face}i')
+                # Continue if piece is solved
+                if all(piece.pos == DOWN + FRONT) and down_color_face == 'D':
+                    # Piece is already solved
+                    pass
 
-                    # Also in E layer
-                    elif (other_color_face + down_color_face) in ('LF', 'FR', 'RB', 'BL'):
-                        # Need to rotate inverse face, UP, face
-                        self.moves.append(other_color_face + 'i')
-                        self.moves.append('U')
-                        self.moves.append(other_color_face)
-                        self.cube.moveSequence(f'{other_color_face}i U {other_color_face}')
-
-                    # In D layer
-                    elif (other_color_face + down_color_face) in ('DF', 'DR', 'DB', 'DL'):
-                        # Need to rotate face, face, Up, face, face
-                        self.moves.append(down_color_face)
-                        self.moves.append(down_color_face)
-                        self.moves.append('U')
-                        self.moves.append(down_color_face)
-                        self.moves.append(down_color_face)
-                        self.cube.moveSequence(f'{down_color_face} {down_color_face} U {down_color_face} {down_color_face}')
-
-                    elif (other_color_face + down_color_face) in ('FD', 'RD', 'BD', 'LD'):
-                        # OPTIMIZE: if down_color on down face, don't need to move to U layer first
-                        # Need to rotate face, face, Up, face, face
-                        self.moves.append(other_color_face)
-                        self.moves.append(other_color_face)
-                        self.moves.append('U')
-                        self.moves.append(other_color_face)
-                        self.moves.append(other_color_face)
-                        self.cube.moveSequence(f'{other_color_face} {other_color_face} U {other_color_face} {other_color_face}')
-
-                    else:
-                        assert False, "Piece wasn't in a spot to move to U layer"
-
-                # If Down color is on Up face, rotate Up until on correct face and spin
-                # face twice
-                if piece.getCubieFaceColor(UP) == cube.getCubeFaceColor(DOWN):
-                    # In up layer, to Up+Front
-                    count = 0
-                    while not all(piece.pos == UP + FRONT):
-                        count += 1
-                        self.moves.append('U')
-                        self.cube.U()
-                        assert count < 4, "Piece can't get to UP+FRONT"
-
-                    # Piece is above, two front turns
-                    self.moves.append('F')
-                    self.moves.append('F')
-                    self.cube.F()
-                    self.cube.F()
-
-                # Down color is not on Up face, move to either Left or Right face
                 else:
-                    # Need to put it to the right or left side if not already
-                    if piece.onFace(FRONT) or piece.onFace(BACK):
-                        self.moves.append('U')
-                        self.cube.U()
+                    # Move to up layer, if not already
+                    if not piece.onFace(UP):
+                        # Get color of cubie that isn't the down color
+                        other_color = (piece.getCubieColors() - set((down_color,))).pop()
+                        # Get the face of the other color
+                        other_color_face = piece.getCubieFaceFromColor(other_color)
 
-                    # On either Left or Right
-                    assert piece.onFace(LEFT) or piece.onFace(RIGHT)
 
-                    self.moves.append('Mi')
-                    self.cube.Mi()
+                        # In E layer
+                        if (other_color_face + down_color_face) in ('FL', 'RF', 'BR', 'LB'):
+                            # Need to rotate face, UP, inverse face
+                            current_moves.append(other_color_face)
+                            current_moves.append('U')
+                            current_moves.append(other_color_face + 'i')
+                            current_cube.moveSequence(f'{other_color_face} U {other_color_face}i')
 
-                    if piece.onFace(LEFT):
-                        self.moves.append('Ui')
-                        self.cube.Ui()
-                    elif piece.onFace(RIGHT):
-                        self.moves.append('U')
-                        self.cube.U()
+                        # Also in E layer
+                        elif (other_color_face + down_color_face) in ('LF', 'FR', 'RB', 'BL'):
+                            # Need to rotate inverse face, UP, face
+                            current_moves.append(other_color_face + 'i')
+                            current_moves.append('U')
+                            current_moves.append(other_color_face)
+                            current_cube.moveSequence(f'{other_color_face}i U {other_color_face}')
 
-                    self.moves.append('M')
-                    self.cube.M()
+                        # In D layer
+                        elif (other_color_face + down_color_face) in ('DF', 'DR', 'DB', 'DL'):
+                            # Need to rotate face, face, Up, face, face
+                            current_moves.append(down_color_face)
+                            current_moves.append(down_color_face)
+                            current_moves.append('U')
+                            current_moves.append(down_color_face)
+                            current_moves.append(down_color_face)
+                            current_cube.moveSequence(f'{down_color_face} {down_color_face} U {down_color_face} {down_color_face}')
 
-            # Spin whole cube to handle next piece
-            self.cube.Y()
-            self.moves.append('Y')
+                        elif (other_color_face + down_color_face) in ('FD', 'RD', 'BD', 'LD'):
+                            # OPTIMIZE: if down_color on down face, don't need to move to U layer first
+                            # Need to rotate face, face, Up, face, face
+                            current_moves.append(other_color_face)
+                            current_moves.append(other_color_face)
+                            current_moves.append('U')
+                            current_moves.append(other_color_face)
+                            current_moves.append(other_color_face)
+                            current_cube.moveSequence(f'{other_color_face} {other_color_face} U {other_color_face} {other_color_face}')
+
+                        else:
+                            assert False, "Piece wasn't in a spot to move to U layer"
+
+                    # If Down color is on Up face, rotate Up until on correct face and spin
+                    # face twice
+                    if piece.getCubieFaceColor(UP) == cube.getCubeFaceColor(DOWN):
+                        # In up layer, to Up+Front
+                        count = 0
+                        while not all(piece.pos == UP + FRONT):
+                            count += 1
+                            current_moves.append('U')
+                            current_cube.U()
+                            assert count < 4, "Piece can't get to UP+FRONT"
+
+                        # Piece is above, two front turns
+                        current_moves.append('F')
+                        current_moves.append('F')
+                        current_cube.F()
+                        current_cube.F()
+
+                    # Down color is not on Up face, move to either Left or Right face
+                    else:
+                        # Need to put it to the right or left side if not already
+                        if piece.onFace(FRONT) or piece.onFace(BACK):
+                            current_moves.append('U')
+                            current_cube.U()
+
+                        # On either Left or Right
+                        assert piece.onFace(LEFT) or piece.onFace(RIGHT)
+
+                        current_moves.append('Mi')
+                        current_cube.Mi()
+
+                        if piece.onFace(LEFT):
+                            current_moves.append('Ui')
+                            current_cube.Ui()
+                        elif piece.onFace(RIGHT):
+                            current_moves.append('U')
+                            current_cube.U()
+
+                        current_moves.append('M')
+                        current_cube.M()
+
+            # Clean Up the current moves
+            current_clean_moves = self.cleanUpMoves(current_moves)
+
+            # Check if current clean moves beat the best clean moves
+            if len(current_clean_moves) < len(best_clean_moves):
+                best_clean_moves = current_clean_moves
+                best_moves = current_moves
+                best_cube = current_cube
+
+        # Use the best moves
+        self.moves = best_moves[:]
+        self.cube = best_cube
 
     def _solveFirstLayer(self):
         '''
@@ -779,10 +800,11 @@ class Solver():
         '''
         Takes a list of moves and removes unnecessary moves.
         '''
-        self._removeRedundancy(moves)
-        self._removeCubeSpins(moves)
+        new_moves = moves[:]
+        self._removeRedundancy(new_moves)
+        self._removeCubeSpins(new_moves)
 
-        return moves
+        return new_moves
 
     def _removeRedundancy(self, moves):
         '''
@@ -839,12 +861,12 @@ if __name__ == '__main__':
     from pretty import prettyPrint
 
     cube = Cube('RRRRRRRRRBBBBBBBBBWWWWWWWWWGGGGGGGGGYYYYYYYYYOOOOOOOOO')
-    # print(cube.scramble(i))
-    cube.moveSequence('R L L B U Bi Fi F F Di D Di R Di Fi U Ri Fi Ri Bi Ui B Ui Li Ui F R R B Li')
+    print(cube.scramble())
+    # cube.moveSequence('Ri R Bi L Li F B R U Fi B D L Di B Fi Di B Bi Ui Ui B F U Bi Di Ui Ri B L')
 
     prettyPrint(cube)
 
-    solver = Solver(cube)
-    solver.solve()
+    solver = Solver(cube, True)
+    cube = solver.solve()
 
     prettyPrint(cube)
