@@ -43,6 +43,10 @@ class Solver():
         print(' '.join(self.moves))
         print(len(self.moves))
 
+        self.cleanMoves = self.cleanUpMoves(self.moves)
+        print(' '.join(self.cleanMoves))
+        print(len(self.cleanMoves))
+
     def _solveCross(self):
         '''
         Step 1: Get the cross on the down face.
@@ -606,6 +610,10 @@ class Solver():
                 # Solving PLL. There's 21 possible algorithms listed here:
                 # http://www.rubiksplace.com/speedcubing/PLL-algorithms/
 
+                # Solved
+                if clockwise_edge_solves == [0, 0, 0, 0] and clockwise_corner_solves == [0, 0, 0, 0]:
+                    return
+
                 # Edge Only Perms
                 if clockwise_edge_solves == [3, 2, 0, 3] and clockwise_corner_solves == [0, 0, 0, 0]:
                     # print('Ua perm')
@@ -767,21 +775,76 @@ class Solver():
         print(clockwise_edge_solves, clockwise_corner_solves)
         assert False, "No match to solve top layer."
 
+    def cleanUpMoves(self, moves):
+        '''
+        Takes a list of moves and removes unnecessary moves.
+        '''
+        self._removeRedundancy(moves)
+        self._removeCubeSpins(moves)
+
+        return moves
+
+    def _removeRedundancy(self, moves):
+        '''
+        Takes a list of moves and removes moves followed by inverse, 4
+        consecutive moves, and replaces 3 consecutive with its inverse.
+        '''
+        for i in range(len(moves)):
+            move = moves[i]
+
+            # Move may have been removed
+            if not move:
+                continue
+
+            if move.endswith('i'):
+                inverse = move[0]
+            else:
+                inverse = move + 'i'
+
+            if i + 1 < len(moves) and moves[i + 1] == inverse:
+                moves[i] = None
+                moves[i + 1] = None
+
+            if moves[i:i + 4] == [move]*4:
+                moves[i] = None
+                moves[i + 1] = None
+                moves[i + 2] = None
+                moves[i + 3] = None
+
+            if moves[i:i + 3] == [move]*3:
+                moves[i] = inverse
+                moves[i + 1] = None
+                moves[i + 2] = None
+
+        moves[:] = [move for move in moves if move != None]
+
+    def _removeCubeSpins(self, moves):
+        '''
+        Takes a list of moves and removes cube spins by appliying them to the
+        remaining moves.
+        '''
+        for i in range(len(moves) - 1, -1, -1):
+            if moves[i] in ('X', 'Xi', 'Y', 'Yi', 'Z', 'Zi'):
+                for j in range(i + 1, len(moves)):
+                    if moves[j]:
+                        moves[j] = TRANSLATIONS[moves[i]][moves[j]]
+
+                moves[i] = None
+
+        moves[:] = [move for move in moves if move]
+
 
 if __name__ == '__main__':
     from cube import Cube
     from pretty import prettyPrint
 
-    for i in range(50):
-        cube = Cube('RRRRRRRRRBBBBBBBBBWWWWWWWWWGGGGGGGGGYYYYYYYYYOOOOOOOOO')
-        print(cube.scramble(i))
+    cube = Cube('RRRRRRRRRBBBBBBBBBWWWWWWWWWGGGGGGGGGYYYYYYYYYOOOOOOOOO')
+    # print(cube.scramble(i))
+    cube.moveSequence('R L L B U Bi Fi F F Di D Di R Di Fi U Ri Fi Ri Bi Ui B Ui Li Ui F R R B Li')
 
-        prettyPrint(cube)
+    prettyPrint(cube)
 
-        solver = Solver(cube)
-        solver.solve()
+    solver = Solver(cube)
+    solver.solve()
 
-        prettyPrint(cube)
-
-        print("Seed:", i)
-        input()
+    prettyPrint(cube)
