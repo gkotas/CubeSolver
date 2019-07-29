@@ -49,6 +49,11 @@ class Solver():
         print(' '.join(self.cleanMoves))
         print(len(self.cleanMoves))
 
+        # Combine double rotations into a single move
+        self.removeDoubleSpins(self.cleanMoves)
+        print(' '.join(self.cleanMoves))
+        print(len(self.cleanMoves))
+
         return self.cube
 
     def _solveCross(self):
@@ -877,6 +882,22 @@ class Solver():
         moves[:] = [move for move in moves if move]
         return changed
 
+    def removeDoubleSpins(self, moves):
+        '''
+        Takes a list of moves and combines duplicate spins into a single move.
+        '''
+        for i in range(len(moves) - 1):
+            if moves[i] == moves[i + 1]:
+                # Double moves
+
+                # Drop the 'i' if its an inverse spin
+                if moves[i].endswith('i'):
+                    moves[i] = moves[i][0]
+
+                moves[i] = moves[i] + '2'
+                moves[i + 1] = None
+
+        moves[:] = [move for move in moves if move]
 
 if __name__ == '__main__':
     from cube import Cube
