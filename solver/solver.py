@@ -162,8 +162,12 @@ class Solver():
                         # On either Left or Right
                         assert piece.onFace(LEFT) or piece.onFace(RIGHT)
 
-                        current_moves.append('Mi')
-                        current_cube.Mi()
+                        current_moves.append('Ri')
+                        current_moves.append('L')
+                        current_moves.append('X')
+                        current_cube.Ri()
+                        current_cube.L()
+                        current_cube.X()
 
                         if piece.onFace(LEFT):
                             current_moves.append('Ui')
@@ -172,8 +176,12 @@ class Solver():
                             current_moves.append('U')
                             current_cube.U()
 
-                        current_moves.append('M')
-                        current_cube.M()
+                        current_moves.append('R')
+                        current_moves.append('Li')
+                        current_moves.append('Xi')
+                        current_cube.R()
+                        current_cube.Li()
+                        current_cube.Xi()
 
             # Clean Up the current moves
             current_clean_moves = self.cleanUpMoves(current_moves)
@@ -800,9 +808,13 @@ class Solver():
         '''
         Takes a list of moves and removes unnecessary moves.
         '''
+        changed = True
         new_moves = moves[:]
-        self._removeRedundancy(new_moves)
-        self._removeCubeSpins(new_moves)
+        while changed:
+            changed = False
+            changed |= self._removeRedundancy(new_moves)
+
+            changed |= self._removeCubeSpins(new_moves)
 
         return new_moves
 
@@ -810,7 +822,9 @@ class Solver():
         '''
         Takes a list of moves and removes moves followed by inverse, 4
         consecutive moves, and replaces 3 consecutive with its inverse.
+        Returns True if a change was made.
         '''
+        changed = False
         for i in range(len(moves)):
             move = moves[i]
 
@@ -826,25 +840,31 @@ class Solver():
             if i + 1 < len(moves) and moves[i + 1] == inverse:
                 moves[i] = None
                 moves[i + 1] = None
+                changed = True
 
             if moves[i:i + 4] == [move]*4:
                 moves[i] = None
                 moves[i + 1] = None
                 moves[i + 2] = None
                 moves[i + 3] = None
+                changed = True
 
             if moves[i:i + 3] == [move]*3:
                 moves[i] = inverse
                 moves[i + 1] = None
                 moves[i + 2] = None
+                changed = True
 
         moves[:] = [move for move in moves if move != None]
+        return changed
 
     def _removeCubeSpins(self, moves):
         '''
         Takes a list of moves and removes cube spins by appliying them to the
         remaining moves.
+        Returns True if a change was made.
         '''
+        changed = False
         for i in range(len(moves) - 1, -1, -1):
             if moves[i] in ('X', 'Xi', 'Y', 'Yi', 'Z', 'Zi'):
                 for j in range(i + 1, len(moves)):
@@ -852,8 +872,10 @@ class Solver():
                         moves[j] = TRANSLATIONS[moves[i]][moves[j]]
 
                 moves[i] = None
+                changed = True
 
         moves[:] = [move for move in moves if move]
+        return changed
 
 
 if __name__ == '__main__':
@@ -862,11 +884,11 @@ if __name__ == '__main__':
 
     cube = Cube('RRRRRRRRRBBBBBBBBBWWWWWWWWWGGGGGGGGGYYYYYYYYYOOOOOOOOO')
     print(cube.scramble())
-    # cube.moveSequence('Ri R Bi L Li F B R U Fi B D L Di B Fi Di B Bi Ui Ui B F U Bi Di Ui Ri B L')
+    # cube.moveSequence('Fi B U B Ri D Bi Ri L Li Li L Di Bi L Fi Ri D L B F Ui Li R D Li Bi F Ui Ui')
 
     prettyPrint(cube)
 
-    solver = Solver(cube, True)
+    solver = Solver(cube)
     cube = solver.solve()
 
     prettyPrint(cube)
